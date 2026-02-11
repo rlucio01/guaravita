@@ -1,0 +1,6 @@
+
+{
+  "name": "Guaravita Ledger - Rayan's Debt Control",
+  "description": "A fun and functional debt tracker for Rayan's Guaravita collection. Features an admin panel for managing debts and a guest portal for payment requests.",
+  "requestFramePermissions": []
+}
