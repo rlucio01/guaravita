@@ -18,10 +18,11 @@ export const db = {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) return JSON.parse(saved);
 
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = import.meta.env.VITE_SUPABASE_URL || '';
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-    if (url && key) {
+    // Valida se a URL é válida (evita PLACEHOLDER_API_KEY ou strings vazias)
+    if (url && url.startsWith('http') && key) {
       return { url, key };
     }
 
@@ -30,30 +31,40 @@ export const db = {
 
   // Salva a configuração no LocalStorage
   saveConfig: (config: SupabaseConfig) => {
+    if (!config.url || !config.url.startsWith('http')) {
+      throw new Error("URL do Supabase inválida.");
+    }
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     supabaseInstance = createClient(config.url, config.key);
   },
 
   // Inicializa ou retorna o cliente
-  getClient: (): SupabaseClient => {
+  getClient: (): SupabaseClient | null => {
     if (supabaseInstance) return supabaseInstance;
 
     const config = db.getConfig();
-    if (!config || !config.url || !config.key) {
-      throw new Error("Supabase não configurado. Vá ao Painel Admin > Configurações.");
+    if (!config || !config.url || !config.key || !config.url.startsWith('http')) {
+      return null;
     }
 
-    supabaseInstance = createClient(config.url, config.key);
-    return supabaseInstance;
+    try {
+      supabaseInstance = createClient(config.url, config.key);
+      return supabaseInstance;
+    } catch (e) {
+      console.error("Erro ao criar cliente Supabase:", e);
+      return null;
+    }
   },
 
   isConfigured: (): boolean => {
-    const config = db.getConfig();
-    return !!(config?.url && config?.key);
+    return db.getClient() !== null;
   },
 
   fetchState: async (): Promise<AppState> => {
     const client = db.getClient();
+    if (!client) {
+      return { debtors: [], requests: [] };
+    }
     const { data: debtors, error: dError } = await client
       .from('debtors')
       .select('*')
@@ -77,6 +88,7 @@ export const db = {
 
   addDebtor: async (name: string) => {
     const client = db.getClient();
+    if (!client) return;
     const { data, error } = await client
       .from('debtors')
       .insert([{ name, amount: 0, hidden: false, last_updated: new Date().toISOString() }])
@@ -88,6 +100,7 @@ export const db = {
 
   updateAmount: async (id: string, delta: number) => {
     const client = db.getClient();
+    if (!client) return;
     const { data: current } = await client.from('debtors').select('amount').eq('id', id).single();
     const newAmount = Math.max(0, (current?.amount || 0) + delta);
 
@@ -101,6 +114,7 @@ export const db = {
 
   toggleVisibility: async (id: string, currentStatus: boolean) => {
     const client = db.getClient();
+    if (!client) return;
     const { error } = await client
       .from('debtors')
       .update({ hidden: !currentStatus })
@@ -111,6 +125,7 @@ export const db = {
 
   removeDebtor: async (id: string) => {
     const client = db.getClient();
+    if (!client) return;
     await client.from('requests').delete().eq('debtor_id', id);
     const { error } = await client.from('debtors').delete().eq('id', id);
     if (error) throw error;
@@ -118,6 +133,7 @@ export const db = {
 
   createRequest: async (debtorId: string, debtorName: string) => {
     const client = db.getClient();
+    if (!client) return;
     const { error } = await client
       .from('requests')
       .insert([{
@@ -131,6 +147,7 @@ export const db = {
 
   processRequest: async (requestId: string, debtorId: string, approved: boolean) => {
     const client = db.getClient();
+    if (!client) return;
     if (approved) {
       const { data: current } = await client.from('debtors').select('amount').eq('id', debtorId).single();
       const newAmount = Math.max(0, (current?.amount || 0) - 1);
