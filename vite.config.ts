@@ -16,10 +16,9 @@ export default defineConfig(({ mode }) => {
       'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || ''),
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || ''),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || ''),
-      'process.env.ADMIN_PASSWORD': JSON.stringify(env.ADMIN_PASSWORD || env.VITE_ADMIN_PASSWORD || 'rayan123'),
-      'global': 'window',
-      'process.env': '({})'
+      'process.env.ADMIN_PASSWORD': JSON.stringify(env.ADMIN_PASSWORD || env.VITE_ADMIN_PASSWORD || 'rayan123')
     },
+
 
     resolve: {
       alias: {
