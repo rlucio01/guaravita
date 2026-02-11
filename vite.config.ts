@@ -5,23 +5,30 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
+    base: '/',
     server: {
       port: 3000,
       host: '0.0.0.0',
     },
     plugins: [react()],
     define: {
-      'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || env.VITE_SUPABASE_URL),
-      'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY),
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
-      'process.env.ADMIN_PASSWORD': JSON.stringify(env.ADMIN_PASSWORD || env.VITE_ADMIN_PASSWORD || 'rayan123')
+      'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || env.VITE_SUPABASE_URL || ''),
+      'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || ''),
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || ''),
+      'process.env.ADMIN_PASSWORD': JSON.stringify(env.ADMIN_PASSWORD || env.VITE_ADMIN_PASSWORD || 'rayan123'),
+      'global.process.env': {}
     },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       }
+    },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
     }
   };
 });
+
 
