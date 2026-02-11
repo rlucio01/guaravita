@@ -14,16 +14,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ state, onUpdate }) => {
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState<SupabaseConfig>({ url: '', key: '' });
+  const [geminiKey, setGeminiKey] = useState('');
 
   useEffect(() => {
     const currentConfig = db.getConfig();
     if (currentConfig) setConfig(currentConfig);
+    setGeminiKey(localStorage.getItem('guaravita_gemini_key') || '');
   }, []);
 
   const handleSaveConfig = () => {
-    if (!config.url || !config.key) return alert("Preencha os dois campos!");
+    if (!config.url || !config.key) return alert("Preencha os dois campos do Supabase!");
     db.saveConfig(config);
-    alert("Configuração salva! O site vai recarregar os dados.");
+    if (geminiKey) {
+      localStorage.setItem('guaravita_gemini_key', geminiKey);
+    }
+    alert("Configuração salva!");
     onUpdate();
   };
 
@@ -98,15 +103,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ state, onUpdate }) => {
         </div>
       )}
 
-      {/* 1. Supabase Setup Instructions (Apenas se não configurado ou explicitamente aberto) */}
+      {/* 1. Supabase Setup & Config */}
       <section className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
-        <button 
+        <button
           onClick={() => setShowConfig(!showConfig)}
           className="w-full px-6 py-4 flex items-center justify-between bg-orange-50 hover:bg-orange-100/50 transition-colors"
         >
           <div className="flex items-center gap-3">
             <Settings className="text-orange-600" size={20} />
-            <span className="font-bold text-orange-900">Configurações de Banco de Dados (Supabase)</span>
+            <span className="font-bold text-orange-900">Configurações de Banco de Dados</span>
           </div>
           <div className="text-xs font-bold text-orange-400">
             {showConfig ? 'Fechar' : 'Configurar'}
@@ -118,27 +123,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ state, onUpdate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Supabase URL</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={config.url}
-                  onChange={(e) => setConfig({...config, url: e.target.value})}
+                  onChange={(e) => setConfig({ ...config, url: e.target.value })}
                   placeholder="https://suaid.supabase.co"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all font-mono text-sm"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Anon Key</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={config.key}
-                  onChange={(e) => setConfig({...config, key: e.target.value})}
+                  onChange={(e) => setConfig({ ...config, key: e.target.value })}
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all font-mono text-sm"
                 />
               </div>
             </div>
-            
-            <button 
+
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest text-indigo-600">Google Gemini API Key (Opcional se houver Env)</label>
+              <input
+                type="password"
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full px-4 py-3 bg-indigo-50/30 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono text-sm"
+              />
+              <p className="text-[10px] text-indigo-400 font-medium">Permite que o Rayan "fale" sobre as dívidas.</p>
+            </div>
+
+            <button
               onClick={handleSaveConfig}
               className="bg-orange-600 text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 hover:bg-orange-700 transition-all active:scale-95 shadow-lg shadow-orange-100"
             >
@@ -152,7 +169,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ state, onUpdate }) => {
               </div>
               <p className="text-xs text-slate-400 mb-4">Copie e cole isso no "SQL Editor" do seu Supabase para criar as tabelas:</p>
               <pre className="text-[10px] sm:text-xs font-mono bg-black/40 p-4 rounded-xl border border-white/5 overflow-x-auto select-all leading-relaxed">
-{`CREATE TABLE IF NOT EXISTS debtors (
+                {`CREATE TABLE IF NOT EXISTS debtors (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text NOT NULL,
   amount int4 DEFAULT 0,
@@ -168,9 +185,9 @@ CREATE TABLE IF NOT EXISTS requests (
   timestamp timestamptz DEFAULT now()
 );`}
               </pre>
-              <a 
-                href="https://supabase.com/dashboard" 
-                target="_blank" 
+              <a
+                href="https://supabase.com/dashboard"
+                target="_blank"
                 className="mt-4 flex items-center gap-2 text-xs font-bold text-orange-300 hover:text-orange-200 transition-colors"
               >
                 Abrir Painel do Supabase <ExternalLink size={12} />
@@ -185,7 +202,7 @@ CREATE TABLE IF NOT EXISTS requests (
         <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <BarChart3 className="text-orange-600" /> Resumo de Pendências (Público)
         </h2>
-        
+
         {rankedDebtors.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {rankedDebtors.map((debtor, index) => {
@@ -202,8 +219,8 @@ CREATE TABLE IF NOT EXISTS requests (
                     <span className="text-orange-600 font-black text-lg">{debtor.amount}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
-                    <div 
-                      className="bg-orange-500 h-1.5 rounded-full transition-all duration-500" 
+                    <div
+                      className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     ></div>
                   </div>
@@ -230,7 +247,7 @@ CREATE TABLE IF NOT EXISTS requests (
           </div>
           <h2 className="text-xl font-black text-orange-900">Adicionar Novo Caloteiro</h2>
         </div>
-        
+
         <form onSubmit={handleAddDebtor} className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <input
