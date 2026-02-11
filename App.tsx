@@ -16,7 +16,7 @@ const App: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
-  
+
   const [rayanMood, setRayanMood] = useState<string>("Rayan está conferindo o estoque...");
   const [isMoodLoading, setIsMoodLoading] = useState(false);
 
@@ -69,7 +69,8 @@ const App: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'rayan123') {
+    const adminPass = (process.env.ADMIN_PASSWORD as string) || 'rayan123';
+    if (password === adminPass) {
       setIsAuthenticated(true);
       setShowLoginModal(false);
       setRole('admin');
@@ -106,21 +107,19 @@ const App: React.FC = () => {
             </h1>
             <p className="mt-3 text-orange-100 font-medium text-lg opacity-90">O controle definitivo das dívidas do Rayan</p>
           </div>
-          
+
           <div className="flex bg-black/10 p-1.5 rounded-2xl backdrop-blur-xl border border-white/10 shadow-inner">
             <button
               onClick={() => handleRoleSwitch('guest')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 ${
-                role === 'guest' ? 'bg-white text-orange-600 shadow-xl scale-105' : 'hover:bg-white/5 text-white/80'
-              }`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 ${role === 'guest' ? 'bg-white text-orange-600 shadow-xl scale-105' : 'hover:bg-white/5 text-white/80'
+                }`}
             >
               <User size={18} /> Público
             </button>
             <button
               onClick={() => handleRoleSwitch('admin')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 ${
-                role === 'admin' ? 'bg-white text-orange-600 shadow-xl scale-105' : 'hover:bg-white/5 text-white/80'
-              }`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 ${role === 'admin' ? 'bg-white text-orange-600 shadow-xl scale-105' : 'hover:bg-white/5 text-white/80'
+                }`}
             >
               {isAuthenticated ? <ShieldCheck size={18} /> : <Lock size={18} />} Admin
             </button>
@@ -206,7 +205,7 @@ const App: React.FC = () => {
                   <h2 className="text-2xl font-black text-gray-800">Acesso Restrito</h2>
                   <p className="text-gray-500 font-medium">Apenas o Rayan (ou quem paga) entra aqui.</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowLoginModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
                 >
@@ -226,7 +225,7 @@ const App: React.FC = () => {
                     className={`w-full pl-12 pr-4 py-4 bg-gray-50 border ${loginError ? 'border-red-500 ring-2 ring-red-100' : 'border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100'} rounded-2xl outline-none transition-all font-medium text-lg`}
                   />
                 </div>
-                
+
                 {loginError && (
                   <p className="text-red-500 text-sm font-bold text-center animate-bounce">Senha incorreta, vacilão!</p>
                 )}
