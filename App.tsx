@@ -69,7 +69,7 @@ const App: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const adminPass = (process.env.ADMIN_PASSWORD as string) || 'rayan123';
+    const adminPass = (import.meta.env.VITE_ADMIN_PASSWORD as string) || 'rayan123';
     if (password === adminPass) {
       setIsAuthenticated(true);
       setShowLoginModal(false);

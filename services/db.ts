@@ -17,11 +17,14 @@ export const db = {
   getConfig: (): SupabaseConfig | null => {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) return JSON.parse(saved);
-    
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-      return { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_ANON_KEY };
+
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (url && key) {
+      return { url, key };
     }
-    
+
     return null;
   },
 
@@ -34,12 +37,12 @@ export const db = {
   // Inicializa ou retorna o cliente
   getClient: (): SupabaseClient => {
     if (supabaseInstance) return supabaseInstance;
-    
+
     const config = db.getConfig();
     if (!config || !config.url || !config.key) {
       throw new Error("Supabase não configurado. Vá ao Painel Admin > Configurações.");
     }
-    
+
     supabaseInstance = createClient(config.url, config.key);
     return supabaseInstance;
   },
@@ -66,9 +69,9 @@ export const db = {
       return { debtors: [], requests: [] };
     }
 
-    return { 
-      debtors: debtors || [], 
-      requests: requests || [] 
+    return {
+      debtors: debtors || [],
+      requests: requests || []
     };
   },
 
@@ -78,7 +81,7 @@ export const db = {
       .from('debtors')
       .insert([{ name, amount: 0, hidden: false, last_updated: new Date().toISOString() }])
       .select();
-    
+
     if (error) throw error;
     return data;
   },
@@ -117,11 +120,11 @@ export const db = {
     const client = db.getClient();
     const { error } = await client
       .from('requests')
-      .insert([{ 
-        debtor_id: debtorId, 
-        debtor_name: debtorName, 
-        status: 'pending', 
-        timestamp: new Date().toISOString() 
+      .insert([{
+        debtor_id: debtorId,
+        debtor_name: debtorName,
+        status: 'pending',
+        timestamp: new Date().toISOString()
       }]);
     if (error) throw error;
   },
@@ -131,7 +134,7 @@ export const db = {
     if (approved) {
       const { data: current } = await client.from('debtors').select('amount').eq('id', debtorId).single();
       const newAmount = Math.max(0, (current?.amount || 0) - 1);
-      
+
       await client
         .from('debtors')
         .update({ amount: newAmount, last_updated: new Date().toISOString() })
